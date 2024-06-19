@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>House Groceries Inventory</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        header {
+            background-color: #007bff;
+            color: white; /* Changed header font color explicitly to white */
+            text-align: center;
+            padding: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .container {
+            margin: 2em auto;
+            max-width: 800px;
+            padding: 2em;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: black; /* Changed to black */
+        }
+        .input-form, .inventory-list {
+            margin-bottom: 2em;
+        }
+        .input-form input, .search-input {
+            width: calc(50% - 1em);
+            padding: 0.5em;
+            margin-right: 1em;
+            margin-bottom: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        .input-form input[type="number"] {
+            width: calc(25% - 1em);
+        }
+        .input-form button {
+            width: calc(25% - 1em);
+        }
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .inventory-table th, .inventory-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .inventory-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .inventory-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            padding: 0.5em 1em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-decrease {
+            background-color: #dc3545;
+            color: white;
+            padding: 0.3em 0.6em;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-decrease:hover {
+            background-color: #c82333;
+        }
+        .input-decrease {
+            width: 60px;
+            padding: 0.3em;
+            margin-right: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .search-input {
+            margin-bottom: 1em;
+            padding: 0.5em;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>House Groceries Inventory</h1>
+    </header>
+    <div class="container">
+        <div class="input-form">
+            <h2>Add a new item</h2>
+            <input type="text" id="itemName" placeholder="Item Name" required>
+            <input type="number" id="itemQuantity" placeholder="Quantity" required>
+            <button class="btn" onclick="addItem()">Add Item</button>
+        </div>
+        <div class="inventory-list">
+            <h2>Available Groceries</h2>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search for an item..." oninput="displayInventory()">
+            <table class="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Item Name</th>
+                        <th>Quantity</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory"></tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        let inventory = [];
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
+
+        function addItem() {
+            let itemName = document.getElementById('itemName').value.trim();
+            const itemQuantity = parseInt(document.getElementById('itemQuantity').value);
+
+            if (itemName && itemQuantity && itemQuantity > 0) {
+                itemName = capitalizeFirstLetter(itemName);
+                const existingItemIndex = inventory.findIndex(item => item.name.toLowerCase() === itemName.toLowerCase());
+
+                if (existingItemIndex > -1) {
+                    // Update quantity if item already exists
+                    inventory[existingItemIndex].quantity += itemQuantity;
+                } else {
+                    // Add new item if it doesn't exist
+                    inventory.push({ name: itemName, quantity: itemQuantity });
+                }
+
+                document.getElementById('itemName').value = '';
+                document.getElementById('itemQuantity').value = '';
+                displayInventory();
+            }
+        }
+
+        function decreaseItem(index) {
+            const decreaseAmount = parseInt(document.getElementById(`decrease-quantity-${index}`).value) || 1;
+            if (inventory[index].quantity > decreaseAmount) {
+                inventory[index].quantity -= decreaseAmount;
+            } else {
+                inventory.splice(index, 1);
+            }
+            displayInventory();
+        }
+
+        function displayInventory() {
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            const inventoryTableBody = document.getElementById('inventory');
+            inventoryTableBody.innerHTML = '';
+
+            inventory
+                .filter(item => item.name.toLowerCase().includes(searchQuery))
+                .forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    const nameCell = document.createElement('td');
+                    const quantityCell = document.createElement('td');
+                    const actionsCell = document.createElement('td');
+
+                    nameCell.textContent = item.name;
+                    quantityCell.textContent = item.quantity;
+
+                    const decreaseInput = document.createElement('input');
+                    decreaseInput.type = 'number';
+                    decreaseInput.min = '1';
+                    decreaseInput.className = 'input-decrease';
+                    decreaseInput.id = `decrease-quantity-${index}`;
+
+                    const decreaseButton = document.createElement('button');
+                    decreaseButton.textContent = 'Decrease';
+                    decreaseButton.className = 'btn-decrease';
+                    decreaseButton.onclick = () => decreaseItem(index);
+
+                    actionsCell.appendChild(decreaseInput);
+                    actionsCell.appendChild(decreaseButton);
+
+                    row.appendChild(nameCell);
+                    row.appendChild(quantityCell);
+                    row.appendChild(actionsCell);
+                    inventoryTableBody.appendChild(row);
+                });
+        }
+    </script>
+</body>
+</html>
